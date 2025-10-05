@@ -37,61 +37,50 @@ class Agent:
        Do not need to focus on its type, since it differs based on game, just find best move from valid_moves
     '''
     def minimax(self, board, depth, maximizingPlayer, alpha, beta):
+        # base cases - check if game is over or depth reached
+        if self.game.game_over(board) or depth == 0:
+            if self.game.is_winner(board, self.selfPiece):
+                return None, self.winscore + depth
+            elif self.game.is_winner(board, self.opponentPiece):
+                return None, self.losescore - depth
+            elif self.game.is_full(board):
+                return None, 0
+            else:
+                return None, self.game.heuristic_value(board, self.selfPiece)
+        
         valid_moves = self.game.get_valid_moves(board)
-        next_move, score = None, None
-
-        # base cases
-        if self.game.is_winner(board, self.selfPiece):
-            return None, self.winscore + depth
         
-        if self.game.is_winner(board, self.opponentPiece):
-            return None, self.losescore - depth
-        
-        if self.game.is_full(board):
-            return None, 0
-        
-        if depth == 0:
-            heuristic_score = self.game.heuristic_value(board, self.selfPiece) - \
-                            self.game.heuristic_value(board, self.opponentPiece)
-            return None, heuristic_score
-        
-        # Max player 
         if maximizingPlayer:
-            max_score = self.MIN
-            best_move = valid_moves[0] if valid_moves else None
+            max_score = -float('inf')
+            best_move = valid_moves[0]
             
             for move in valid_moves:
                 new_board = self.game.play_move(board, move, self.selfPiece)
-                _, current_score = self.minimax(new_board, depth - 1, False, alpha, beta)
+                _, score = self.minimax(new_board, depth - 1, False, alpha, beta)
                 
-                if current_score > max_score:
-                    max_score = current_score
+                if score > max_score:
+                    max_score = score
                     best_move = move
                 
-                alpha = max(alpha, current_score)
-                
-                # pruning
+                alpha = max(alpha, score)
                 if beta <= alpha:
                     break
             
             return best_move, max_score
         
-        # Min player 
         else:
-            min_score = self.MAX
-            best_move = valid_moves[0] if valid_moves else None
+            min_score = float('inf')
+            best_move = valid_moves[0]
             
             for move in valid_moves:
                 new_board = self.game.play_move(board, move, self.opponentPiece)
-                _, current_score = self.minimax(new_board, depth - 1, True, alpha, beta)
+                _, score = self.minimax(new_board, depth - 1, True, alpha, beta)
                 
-                if current_score < min_score:
-                    min_score = current_score
+                if score < min_score:
+                    min_score = score
                     best_move = move
                 
-                beta = min(beta, current_score)
-                
-                # pruning
+                beta = min(beta, score)
                 if beta <= alpha:
                     break
             
